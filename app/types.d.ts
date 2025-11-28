@@ -1,4 +1,5 @@
 import NextAuth from "next-auth";
+import { Expense, Category } from "@/app/generated/prisma/client";
 
 declare module "next-auth" {
   interface Session {
@@ -10,3 +11,8 @@ declare module "next-auth" {
     };
   }
 }
+
+// Expense types
+export type ExpenseWithCategory = Expense & {
+  category: Category;
+};

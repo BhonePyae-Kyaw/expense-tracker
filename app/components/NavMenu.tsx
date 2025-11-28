@@ -26,14 +26,13 @@ function AuthButton() {
 }
 
 export default function NavMenu() {
-  const { data: session } = useSession();
   return (
     <nav className="flex items-center justify-between p-4 bg-zinc-100 dark:bg-zinc-900">
       <Link
         href="/"
         className="text-lg font-bold text-zinc-800 dark:text-zinc-200"
       >
-        Expense Tracker {session?.user?.name}
+        Expense Tracker
       </Link>
       <AuthButton />
     </nav>
