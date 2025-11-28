@@ -23,8 +23,6 @@ function AuthButton() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  console.log("Session data in NavMenu:", session);
-
   if (session) {
     return (
       <div className="relative" ref={dropdownRef}>

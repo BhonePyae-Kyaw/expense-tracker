@@ -3,7 +3,6 @@ import { Category } from "./app/generated/prisma/client";
 
 async function main() {
   const categories: Category[] = await prisma.category.findMany();
-  console.log("Categories:", categories);
 }
 
 main()

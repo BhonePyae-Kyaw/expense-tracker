@@ -11,8 +11,6 @@ export async function DELETE(
     const session = await getServerSession(authOptions);
     const { id } = await params;
 
-    console.log("Deleting expense with id:", id);
-
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
