@@ -76,11 +76,42 @@ export default function SignInPage() {
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-2 bg-white text-gray-500">
-                Secure authentication powered by NextAuth
+                Or try demo account
               </span>
             </div>
           </div>
         </div>
+
+        <button
+          onClick={() => signIn("demo", { callbackUrl })}
+          className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-indigo-200 bg-indigo-50 rounded-lg hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+        >
+          <svg
+            className="w-6 h-6 text-indigo-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+            />
+          </svg>
+          <div className="text-left">
+            <div className="text-sm font-medium text-indigo-900">
+              Try Demo Account
+            </div>
+            <div className="text-xs text-indigo-600">
+              Explore with pre-populated data
+            </div>
+          </div>
+        </button>
+
+        <p className="text-xs text-center text-gray-500 mt-4">
+          Secure authentication powered by NextAuth
+        </p>
       </div>
     </div>
   );

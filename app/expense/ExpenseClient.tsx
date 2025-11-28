@@ -28,8 +28,8 @@ export default function ExpenseClient({
   const [expenses, setExpenses] =
     useState<ExpenseWithCategory[]>(initialExpenses);
   const [selectedPeriod, setSelectedPeriod] = useState<
-    "today" | "week" | "month"
-  >("today");
+    "today" | "week" | "month" | "3months" | "all"
+  >("3months");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -37,21 +37,38 @@ export default function ExpenseClient({
   const [showNewExpenseModal, setShowNewExpenseModal] = useState(false);
   const [editingExpense, setEditingExpense] =
     useState<ExpenseWithCategory | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const filteredExpenses = useMemo(() => {
     let filtered = expenses;
 
     // Filter by period
-    const now = new Date();
-    if (selectedPeriod === "today") {
-      const today = new Date(now.setHours(0, 0, 0, 0));
-      filtered = filtered.filter((e) => new Date(e.date) >= today);
-    } else if (selectedPeriod === "week") {
-      const weekAgo = new Date(now.setDate(now.getDate() - 7));
-      filtered = filtered.filter((e) => new Date(e.date) >= weekAgo);
-    } else if (selectedPeriod === "month") {
-      const monthAgo = new Date(now.setMonth(now.getMonth() - 1));
-      filtered = filtered.filter((e) => new Date(e.date) >= monthAgo);
+    if (selectedPeriod !== "all") {
+      const now = new Date();
+      let cutoffDate: Date;
+
+      if (selectedPeriod === "today") {
+        cutoffDate = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate(),
+          0,
+          0,
+          0,
+          0
+        );
+      } else if (selectedPeriod === "week") {
+        cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      } else if (selectedPeriod === "month") {
+        cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      } else if (selectedPeriod === "3months") {
+        cutoffDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+      } else {
+        cutoffDate = new Date(0); // All time
+      }
+
+      filtered = filtered.filter((e) => new Date(e.date) >= cutoffDate);
     }
 
     // Filter by date range
@@ -93,6 +110,19 @@ export default function ExpenseClient({
     return filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
   }, [filteredExpenses]);
 
+  // Pagination
+  const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage);
+  const paginatedExpenses = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredExpenses.slice(startIndex, endIndex);
+  }, [filteredExpenses, currentPage, itemsPerPage]);
+
+  // Reset to page 1 when filters change
+  useMemo(() => {
+    setCurrentPage(1);
+  }, [selectedPeriod, startDate, endDate, selectedCategory, searchTerm]);
+
   const expensesByCategory = useMemo(() => {
     const categoryMap = new Map<string, { name: string; amount: number }>();
     filteredExpenses.forEach((expense) => {
@@ -128,6 +158,20 @@ export default function ExpenseClient({
     setEditingExpense(null);
   };
 
+  const handleStartDateChange = (date: string) => {
+    setStartDate(date);
+    if (date) {
+      setSelectedPeriod("all");
+    }
+  };
+
+  const handleEndDateChange = (date: string) => {
+    setEndDate(date);
+    if (date) {
+      setSelectedPeriod("all");
+    }
+  };
+
   return (
     <div className="p-6">
       <ExpenseHeader onNewExpense={() => setShowNewExpenseModal(true)} />
@@ -141,8 +185,8 @@ export default function ExpenseClient({
         <DateRangeSelector
           startDate={startDate}
           endDate={endDate}
-          onStartDateChange={setStartDate}
-          onEndDateChange={setEndDate}
+          onStartDateChange={handleStartDateChange}
+          onEndDateChange={handleEndDateChange}
         />
       </div>
 
@@ -173,10 +217,73 @@ export default function ExpenseClient({
         />
 
         <ExpenseTable
-          expenses={filteredExpenses}
+          expenses={paginatedExpenses}
           onDelete={handleDeleteExpense}
           onEdit={handleEditExpense}
         />
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6 px-4">
+            <div className="text-sm text-gray-600">
+              Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+              {Math.min(currentPage * itemsPerPage, filteredExpenses.length)} of{" "}
+              {filteredExpenses.length} expenses
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Previous
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((page) => {
+                    // Show first page, last page, current page, and pages around current
+                    return (
+                      page === 1 ||
+                      page === totalPages ||
+                      Math.abs(page - currentPage) <= 1
+                    );
+                  })
+                  .map((page, index, array) => {
+                    // Add ellipsis if there's a gap
+                    const prevPage = array[index - 1];
+                    const showEllipsis = prevPage && page - prevPage > 1;
+
+                    return (
+                      <div key={page} className="flex items-center">
+                        {showEllipsis && (
+                          <span className="px-2 text-gray-500">...</span>
+                        )}
+                        <button
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            currentPage === page
+                              ? "bg-blue-600 text-white"
+                              : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      </div>
+                    );
+                  })}
+              </div>
+              <button
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* New Expense Modal */}

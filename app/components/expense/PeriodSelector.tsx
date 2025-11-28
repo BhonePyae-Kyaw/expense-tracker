@@ -1,8 +1,10 @@
 "use client";
 
 interface PeriodSelectorProps {
-  selectedPeriod: "today" | "week" | "month";
-  onPeriodChange: (period: "today" | "week" | "month") => void;
+  selectedPeriod: "today" | "week" | "month" | "3months" | "all";
+  onPeriodChange: (
+    period: "today" | "week" | "month" | "3months" | "all"
+  ) => void;
 }
 
 export default function PeriodSelector({
@@ -10,7 +12,7 @@ export default function PeriodSelector({
   onPeriodChange,
 }: PeriodSelectorProps) {
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 flex-wrap">
       <button
         onClick={() => onPeriodChange("today")}
         className={`px-4 py-2 rounded-lg transition-colors ${
@@ -29,7 +31,7 @@ export default function PeriodSelector({
             : "bg-gray-100 text-gray-700 hover:bg-gray-200"
         }`}
       >
-        This Week
+        Last 7 Days
       </button>
       <button
         onClick={() => onPeriodChange("month")}
@@ -39,7 +41,27 @@ export default function PeriodSelector({
             : "bg-gray-100 text-gray-700 hover:bg-gray-200"
         }`}
       >
-        This Month
+        Last 30 Days
+      </button>
+      <button
+        onClick={() => onPeriodChange("3months")}
+        className={`px-4 py-2 rounded-lg transition-colors ${
+          selectedPeriod === "3months"
+            ? "bg-blue-600 text-white"
+            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+        }`}
+      >
+        Last 3 Months
+      </button>
+      <button
+        onClick={() => onPeriodChange("all")}
+        className={`px-4 py-2 rounded-lg transition-colors ${
+          selectedPeriod === "all"
+            ? "bg-blue-600 text-white"
+            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+        }`}
+      >
+        All Time
       </button>
     </div>
   );

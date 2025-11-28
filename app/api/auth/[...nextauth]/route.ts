@@ -1,6 +1,7 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { Adapter } from "next-auth/adapters";
 import prisma from "../../../../lib/prisma";
@@ -16,14 +17,50 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
+    CredentialsProvider({
+      id: "demo",
+      name: "Demo Account",
+      credentials: {},
+      async authorize() {
+        // Find or create the demo user
+        const demoUser = await prisma.user.upsert({
+          where: { email: "demo@expensetracker.com" },
+          update: {},
+          create: {
+            email: "demo@expensetracker.com",
+            name: "Demo User",
+            image: null,
+          },
+        });
+
+        return {
+          id: demoUser.id,
+          email: demoUser.email!,
+          name: demoUser.name,
+          image: demoUser.image,
+        };
+      },
+    }),
   ],
   session: {
-    strategy: "database",
+    strategy: "jwt",
   },
   callbacks: {
-    session: async ({ session, user }) => {
-      if (session?.user) {
-        session.user.id = user.id;
+    async jwt({ token, user, account }) {
+      // Save user id to token on sign in
+      if (user) {
+        token.id = user.id;
+
+        // For OAuth providers, also store in database
+        if (account && account.provider !== "demo") {
+          // This will be handled by the adapter
+        }
+      }
+      return token;
+    },
+    session: async ({ session, token }) => {
+      if (session?.user && token) {
+        session.user.id = token.id as string;
       }
       return session;
     },
