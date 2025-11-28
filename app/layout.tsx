@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { getServerSession } from "next-auth";
-import NavMenu from "./components/NavMenu";
+import ConditionalNavMenu from "./components/ConditionalNavMenu";
 import SessionProvider from "./components/SessionProvider";
 import { authOptions } from "./api/auth/[...nextauth]/route";
 const geistSans = Geist({
@@ -32,7 +32,10 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <SessionProvider session={session}>
-          <main>{children}</main>
+          <main>
+            <ConditionalNavMenu />
+            {children}
+          </main>
         </SessionProvider>
       </body>
     </html>
