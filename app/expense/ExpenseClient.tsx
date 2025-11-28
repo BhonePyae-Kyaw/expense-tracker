@@ -5,6 +5,7 @@ import { Category } from "@/app/generated/prisma/client";
 import { ExpenseWithCategory } from "@/app/types";
 import { deleteExpense as deleteExpenseApi } from "@/app/utils/expenseHelper";
 import ExpenseCreateModal from "@/app/components/expense/ExpenseCreateModal";
+import ExpenseEditModal from "@/app/components/expense/ExpenseEditModal";
 import ExpenseTable from "@/app/components/expense/ExpenseTable";
 import ExpenseHeader from "@/app/components/expense/ExpenseHeader";
 import PeriodSelector from "@/app/components/expense/PeriodSelector";
@@ -34,6 +35,8 @@ export default function ExpenseClient({
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [showNewExpenseModal, setShowNewExpenseModal] = useState(false);
+  const [editingExpense, setEditingExpense] =
+    useState<ExpenseWithCategory | null>(null);
 
   const filteredExpenses = useMemo(() => {
     let filtered = expenses;
@@ -111,6 +114,20 @@ export default function ExpenseClient({
     }
   };
 
+  const handleEditExpense = (id: string) => {
+    const expense = expenses.find((e) => e.id === id);
+    if (expense) {
+      setEditingExpense(expense);
+    }
+  };
+
+  const handleUpdateExpense = (updatedExpense: ExpenseWithCategory) => {
+    setExpenses(
+      expenses.map((e) => (e.id === updatedExpense.id ? updatedExpense : e))
+    );
+    setEditingExpense(null);
+  };
+
   return (
     <div className="p-6">
       <ExpenseHeader onNewExpense={() => setShowNewExpenseModal(true)} />
@@ -158,6 +175,7 @@ export default function ExpenseClient({
         <ExpenseTable
           expenses={filteredExpenses}
           onDelete={handleDeleteExpense}
+          onEdit={handleEditExpense}
         />
       </div>
 
@@ -171,6 +189,16 @@ export default function ExpenseClient({
             setExpenses([newExpense, ...expenses]);
             setShowNewExpenseModal(false);
           }}
+        />
+      )}
+
+      {/* Edit Expense Modal */}
+      {editingExpense && (
+        <ExpenseEditModal
+          expense={editingExpense}
+          categories={categories}
+          onClose={() => setEditingExpense(null)}
+          onSuccess={handleUpdateExpense}
         />
       )}
     </div>
